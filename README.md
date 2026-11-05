@@ -6,7 +6,7 @@
 
 以本地存储为主的加密资产看板与交易复盘工具。无需注册、无需连接钱包。
 
-[![Quality checks](https://github.com/EricXUzi/v0-crypto-portfolio-journal/actions/workflows/ci.yml/badge.svg)](https://github.com/EricXUzi/v0-crypto-portfolio-journal/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/core_tests-9_passed-218574)
 ![Next.js](https://img.shields.io/badge/Next.js-16-18253B)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-5965D9)
 ![Storage](https://img.shields.io/badge/storage-local--first-218574)
@@ -99,7 +99,7 @@ pnpm build
 pnpm start
 ```
 
-`pnpm lint` 同时执行 Prettier 格式检查与严格类型检查。[本地验证记录](docs/TESTING.md)列出已检查的页面与场景。测试使用 Node.js 内置测试器，覆盖收益计算、配对规则和备份完整性；GitHub Actions（自动化检查）执行类型检查、测试和生产构建。
+`pnpm lint` 同时执行 Prettier 格式检查与严格类型检查。[本地验证记录](docs/TESTING.md)列出已检查的页面与场景。测试使用 Node.js 内置测试器，覆盖收益计算、配对规则和备份完整性。GitHub Actions（自动化检查）配置见 [工作流示例](docs/ci-workflow.example.yml)，可放到 `.github/workflows/ci.yml` 启用；当前尚未启用线上自动检查。
 
 部署到支持 Node.js 的 Next.js 托管平台：安装命令使用 `pnpm install --frozen-lockfile --ignore-scripts`，构建命令使用 `pnpm build`，启动命令使用 `pnpm start`。数据按访问域名隔离，更换域名前请导出备份。本仓库不承诺已有在线演示可用。
 
