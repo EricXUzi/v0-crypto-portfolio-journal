@@ -7,7 +7,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { MoreVertical, Pencil, Trash2, Coins, TrendingUp, TrendingDown } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -45,7 +50,7 @@ export function AssetList() {
 
   const handleSetManualPrice = (assetId: string) => {
     const price = Number.parseFloat(manualPrice)
-    if (!isNaN(price) && price > 0) {
+    if (!isNaN(price) && price >= 0) {
       updateAsset(assetId, { manualPrice: price })
     }
     setEditingPriceId(null)
@@ -90,7 +95,7 @@ export function AssetList() {
           <TableBody>
             {assets.map((asset) => {
               const price = asset.manualPrice ?? getPrice(asset.symbol)
-              const change24h = get24hChange(asset.symbol)
+              const change24h = asset.manualPrice === undefined ? get24hChange(asset.symbol) : 0
               const value = asset.quantity * price
               const costBasis = asset.quantity * asset.averageCost
               const pnl = value - costBasis
@@ -132,8 +137,10 @@ export function AssetList() {
                       </div>
                     ) : (
                       <div className="flex items-center justify-end gap-1">
-                        <span className="font-mono">{formatUsd(price)}</span>
-                        {asset.manualPrice && (
+                        <span className="font-mono">
+                          {asset.manualPrice === undefined && price <= 0 ? "Unpriced" : formatUsd(price)}
+                        </span>
+                        {asset.manualPrice !== undefined && (
                           <Badge variant="secondary" className="text-xs">
                             Manual
                           </Badge>
@@ -142,28 +149,48 @@ export function AssetList() {
                     )}
                   </TableCell>
                   <TableCell
-                    className={cn("text-right font-mono", change24h >= 0 ? "text-success" : "text-destructive")}
+                    className={cn(
+                      "text-right font-mono",
+                      change24h >= 0 ? "text-success" : "text-destructive",
+                    )}
                   >
                     {change24h !== 0 ? (
                       <div className="flex items-center justify-end gap-1">
-                        {change24h >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                        {change24h >= 0 ? (
+                          <TrendingUp className="h-3 w-3" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3" />
+                        )}
                         {formatPercent(change24h)}
                       </div>
                     ) : (
                       "—"
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-mono font-medium">{formatUsd(value)}</TableCell>
-                  <TableCell className={cn("text-right font-mono", pnl >= 0 ? "text-success" : "text-destructive")}>
+                  <TableCell className="text-right font-mono font-medium">
+                    {asset.manualPrice === undefined && price <= 0 ? "—" : formatUsd(value)}
+                  </TableCell>
+                  <TableCell
+                    className={cn("text-right font-mono", pnl >= 0 ? "text-success" : "text-destructive")}
+                  >
                     <div>
-                      {formatUsd(pnl)}
-                      <span className="ml-1 text-xs">({formatPercent(pnlPercent)})</span>
+                      {asset.manualPrice === undefined && price <= 0 ? "—" : formatUsd(pnl)}
+                      <span className="ml-1 text-xs">
+                        {asset.manualPrice === undefined && price <= 0
+                          ? ""
+                          : `(${formatPercent(pnlPercent)})`}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button
+                          aria-label="Open record actions"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                        >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -177,12 +204,22 @@ export function AssetList() {
                           <Pencil className="mr-2 h-4 w-4" />
                           Set Manual Price
                         </DropdownMenuItem>
-                        {asset.manualPrice && (
+                        {asset.manualPrice !== undefined && (
                           <DropdownMenuItem onClick={() => handleClearManualPrice(asset.id)}>
                             Clear Manual Price
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem onClick={() => deleteAsset(asset.id)} className="text-destructive">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Delete the ${asset.symbol} holding? Journal entries will remain.`,
+                              )
+                            )
+                              deleteAsset(asset.id)
+                          }}
+                          className="text-destructive"
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>

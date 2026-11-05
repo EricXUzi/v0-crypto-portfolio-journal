@@ -51,28 +51,28 @@ export function MonthlyPnlChart() {
                 dataKey="month"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: "var(--muted-foreground)" }}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: "var(--muted-foreground)" }}
                 tickFormatter={(value) => `$${value.toLocaleString()}`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--popover)",
+                  border: "1px solid var(--border)",
                   borderRadius: "8px",
                 }}
-                formatter={(value: number) => [`$${value.toLocaleString()}`, "PnL"]}
+                formatter={(value) => [`$${Number(value ?? 0).toLocaleString()}`, "PnL"]}
               />
-              <ReferenceLine y={0} stroke="hsl(var(--border))" />
+              <ReferenceLine y={0} stroke="var(--border)" />
               <Bar dataKey="pnl" radius={[4, 4, 0, 0]}>
                 {monthlyData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={entry.pnl >= 0 ? "hsl(var(--success))" : "hsl(var(--destructive))"}
+                    fill={entry.pnl >= 0 ? "var(--success)" : "var(--destructive)"}
                   />
                 ))}
               </Bar>

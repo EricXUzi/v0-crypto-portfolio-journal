@@ -35,7 +35,7 @@ export function AddAccountDialog() {
     e.preventDefault()
 
     addAccount({
-      name,
+      name: name.trim(),
       type,
       address: address || undefined,
       exchange: exchange || undefined,

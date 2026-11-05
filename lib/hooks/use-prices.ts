@@ -44,7 +44,9 @@ const fetcher = async (symbols: string[]): Promise<PriceData> => {
 
   if (!ids) return {}
 
-  const res = await fetch(`${COINGECKO_API}/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`)
+  const res = await fetch(
+    `${COINGECKO_API}/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+  )
 
   if (!res.ok) throw new Error("Failed to fetch prices")
   return res.json()
@@ -54,7 +56,7 @@ export function usePrices(symbols: string[]) {
   const updatePrice = useAppStore((state) => state.updatePrice)
   const priceCache = useAppStore((state) => state.priceCache)
 
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR(
     symbols.length > 0 ? ["prices", ...symbols] : null,
     () => fetcher(symbols),
     {
@@ -67,8 +69,12 @@ export function usePrices(symbols: string[]) {
     if (data) {
       Object.entries(data).forEach(([id, priceData]) => {
         const symbol = Object.entries(SYMBOL_TO_ID).find(([, v]) => v === id)?.[0]
-        if (symbol) {
-          updatePrice(symbol, priceData.usd, priceData.usd_24h_change)
+        if (symbol && Number.isFinite(priceData.usd) && priceData.usd > 0) {
+          updatePrice(
+            symbol,
+            priceData.usd,
+            Number.isFinite(priceData.usd_24h_change) ? priceData.usd_24h_change : 0,
+          )
         }
       })
     }
@@ -95,6 +101,11 @@ export function usePrices(symbols: string[]) {
   }
 
   return {
+    refresh: () => mutate(),
+    lastUpdated: [...priceCache.values()].reduce<Date | undefined>(
+      (latest, p) => (!latest || p.lastUpdated > latest ? p.lastUpdated : latest),
+      undefined,
+    ),
     prices: data,
     isLoading,
     error,

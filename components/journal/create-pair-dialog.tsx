@@ -20,6 +20,7 @@ function formatUsd(value: number): string {
 }
 
 export function CreatePairDialog() {
+  const [error, setError] = useState("")
   const [open, setOpen] = useState(false)
   const [buyId, setBuyId] = useState("")
   const [sellId, setSellId] = useState("")
@@ -30,17 +31,26 @@ export function CreatePairDialog() {
   // Filter unpaired transactions
   const unpairedTransactions = transactions.filter((t) => !t.pairId)
 
-  const buyTransactions = unpairedTransactions.filter((t) =>
-    ["spot", "swap", "tge_ido", "nft_buy", "nft_mint", "airdrop"].includes(t.type),
+  const buyTransactions = unpairedTransactions.filter(
+    (t) =>
+      ["spot", "swap", "tge_ido", "nft_buy", "nft_mint", "airdrop"].includes(t.type) && t.side !== "sell",
   )
 
-  const sellTransactions = unpairedTransactions.filter((t) => ["spot", "swap", "nft_sell"].includes(t.type))
+  const sellTransactions = unpairedTransactions.filter(
+    (t) => t.id !== buyId && ["spot", "swap", "nft_sell"].includes(t.type) && t.side !== "buy",
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (buyId && sellId) {
-      createTradePair(buyId, sellId)
+      try {
+        createTradePair(buyId, sellId)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Unable to pair trades.")
+        return
+      }
+      setError("")
       setBuyId("")
       setSellId("")
       setOpen(false)
@@ -60,6 +70,15 @@ export function CreatePairDialog() {
           <DialogTitle>Create Trade Pair</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-xs leading-5 text-muted-foreground">
+            Pair one entry and one exit for the same asset, account and quantity. For partial exits, split the
+            records before pairing.
+          </p>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
           <div className="space-y-2">
             <Label>Buy Transaction</Label>
             <Select value={buyId} onValueChange={setBuyId}>

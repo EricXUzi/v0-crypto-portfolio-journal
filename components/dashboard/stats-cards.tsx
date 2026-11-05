@@ -71,7 +71,9 @@ export function StatsCards() {
               <p
                 className={cn(
                   "text-xs",
-                  stat.changeValue !== undefined && stat.changeValue >= 0 ? "text-success" : "text-destructive",
+                  stat.changeValue !== undefined && stat.changeValue >= 0
+                    ? "text-success"
+                    : "text-destructive",
                 )}
               >
                 {stat.change}

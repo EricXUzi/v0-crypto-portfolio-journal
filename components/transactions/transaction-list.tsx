@@ -1,14 +1,20 @@
 "use client"
 
+import Link from "next/link"
 import { useMemo } from "react"
 import { useAppStore } from "@/lib/store"
 import { useTransactionFilters } from "./transaction-filters"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreVertical, Pencil, Trash2, CheckCircle, LinkIcon, ArrowLeftRight } from "lucide-react"
+import { MoreVertical, Trash2, CheckCircle, LinkIcon, ArrowLeftRight } from "lucide-react"
 import { format } from "date-fns"
 import type { TransactionType } from "@/lib/types"
 
@@ -99,6 +105,13 @@ export function TransactionList() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {filteredTransactions.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={9} className="h-28 text-center text-muted-foreground">
+                  No transactions match these filters.
+                </TableCell>
+              </TableRow>
+            )}
             {filteredTransactions.map((tx) => (
               <TableRow key={tx.id}>
                 <TableCell className="font-mono text-sm">
@@ -107,7 +120,10 @@ export function TransactionList() {
                 <TableCell>
                   <Badge variant="outline">{transactionLabels[tx.type]}</Badge>
                 </TableCell>
-                <TableCell className="font-medium">{tx.assetSymbol}</TableCell>
+                <TableCell className="font-medium">
+                  {tx.assetSymbol}
+                  {tx.side && <span className="ml-2 text-xs text-muted-foreground">{tx.side}</span>}
+                </TableCell>
                 <TableCell className="text-muted-foreground">{getAccountName(tx.accountId)}</TableCell>
                 <TableCell className="text-right font-mono">{tx.quantity.toLocaleString()}</TableCell>
                 <TableCell className="text-right font-mono">{formatUsd(tx.pricePerUnit)}</TableCell>
@@ -118,7 +134,12 @@ export function TransactionList() {
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button
+                        aria-label={`Actions for ${tx.assetSymbol} transaction`}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -129,15 +150,23 @@ export function TransactionList() {
                           Mark as Settled
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem>
-                        <LinkIcon className="mr-2 h-4 w-4" />
-                        Pair Trade
+                      <DropdownMenuItem asChild>
+                        <Link href="/journal">
+                          <LinkIcon className="mr-2 h-4 w-4" />
+                          Pair trade in journal
+                        </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => deleteTransaction(tx.id)} className="text-destructive">
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Delete this transaction? Its trade pair will also be removed. Holdings will stay as recorded.",
+                            )
+                          )
+                            deleteTransaction(tx.id)
+                        }}
+                        className="text-destructive"
+                      >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
                       </DropdownMenuItem>

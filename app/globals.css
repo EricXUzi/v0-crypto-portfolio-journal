@@ -3,89 +3,49 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* <CHANGE> Dark-first crypto trading theme with cyan accent */
 :root {
-  --background: oklch(0.13 0.01 260);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.16 0.01 260);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.18 0.01 260);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.75 0.15 195);
-  --primary-foreground: oklch(0.13 0.01 260);
-  --secondary: oklch(0.22 0.01 260);
-  --secondary-foreground: oklch(0.85 0 0);
-  --muted: oklch(0.22 0.01 260);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.75 0.15 195);
-  --accent-foreground: oklch(0.13 0.01 260);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --success: oklch(0.7 0.18 145);
-  --success-foreground: oklch(0.13 0.01 260);
-  --warning: oklch(0.8 0.15 85);
-  --warning-foreground: oklch(0.13 0.01 260);
-  --border: oklch(0.25 0.01 260);
-  --input: oklch(0.2 0.01 260);
-  --ring: oklch(0.75 0.15 195);
-  --chart-1: oklch(0.75 0.15 195);
-  --chart-2: oklch(0.7 0.18 145);
-  --chart-3: oklch(0.8 0.15 85);
-  --chart-4: oklch(0.65 0.2 300);
-  --chart-5: oklch(0.55 0.22 25);
-  --radius: 0.5rem;
-  --sidebar: oklch(0.1 0.01 260);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.75 0.15 195);
-  --sidebar-primary-foreground: oklch(0.13 0.01 260);
-  --sidebar-accent: oklch(0.18 0.01 260);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.22 0.01 260);
-  --sidebar-ring: oklch(0.75 0.15 195);
-}
-
-.dark {
-  --background: oklch(0.13 0.01 260);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.16 0.01 260);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.18 0.01 260);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.75 0.15 195);
-  --primary-foreground: oklch(0.13 0.01 260);
-  --secondary: oklch(0.22 0.01 260);
-  --secondary-foreground: oklch(0.85 0 0);
-  --muted: oklch(0.22 0.01 260);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.75 0.15 195);
-  --accent-foreground: oklch(0.13 0.01 260);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --success: oklch(0.7 0.18 145);
-  --success-foreground: oklch(0.13 0.01 260);
-  --warning: oklch(0.8 0.15 85);
-  --warning-foreground: oklch(0.13 0.01 260);
-  --border: oklch(0.25 0.01 260);
-  --input: oklch(0.2 0.01 260);
-  --ring: oklch(0.75 0.15 195);
-  --chart-1: oklch(0.75 0.15 195);
-  --chart-2: oklch(0.7 0.18 145);
-  --chart-3: oklch(0.8 0.15 85);
-  --chart-4: oklch(0.65 0.2 300);
-  --chart-5: oklch(0.55 0.22 25);
-  --sidebar: oklch(0.1 0.01 260);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.75 0.15 195);
-  --sidebar-primary-foreground: oklch(0.13 0.01 260);
-  --sidebar-accent: oklch(0.18 0.01 260);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.22 0.01 260);
-  --sidebar-ring: oklch(0.75 0.15 195);
+  --background: #f3f5fa;
+  --foreground: #1a2741;
+  --card: #ffffff;
+  --card-foreground: #1a2741;
+  --popover: #ffffff;
+  --popover-foreground: #1a2741;
+  --primary: #5965d9;
+  --primary-foreground: #ffffff;
+  --secondary: #edf0f7;
+  --secondary-foreground: #394762;
+  --muted: #edf0f7;
+  --muted-foreground: #68758d;
+  --accent: #e8ebfc;
+  --accent-foreground: #414eb9;
+  --destructive: #c64f64;
+  --destructive-foreground: #ffffff;
+  --success: #218574;
+  --success-foreground: #ffffff;
+  --warning: #ac7428;
+  --warning-foreground: #ffffff;
+  --border: #e2e7f0;
+  --input: #e2e7f0;
+  --ring: #5965d9;
+  --chart-1: #5965d9;
+  --chart-2: #40a391;
+  --chart-3: #d2a45e;
+  --chart-4: #9c88d5;
+  --chart-5: #c64f64;
+  --radius: 0.8rem;
+  --sidebar: #1c2742;
+  --sidebar-foreground: #e9edf8;
+  --sidebar-primary: #aab4ff;
+  --sidebar-primary-foreground: #1c2742;
+  --sidebar-accent: #2c3753;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #35405a;
+  --sidebar-ring: #5965d9;
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: "Avenir Next", "Segoe UI", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -134,5 +94,39 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  body {
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.035em;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  ::selection {
+    background: #dce1ff;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }

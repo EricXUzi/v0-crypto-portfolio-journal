@@ -49,13 +49,18 @@ export function AccountOverview() {
       </CardHeader>
       <CardContent>
         {accountsWithValue.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No accounts yet. Add your first account to start tracking.</p>
+          <p className="text-sm text-muted-foreground">
+            No accounts yet. Add your first account to start tracking.
+          </p>
         ) : (
           <div className="space-y-4">
             {accountsWithValue.map((account) => {
               const Icon = accountTypeIcons[account.type]
               return (
-                <div key={account.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div
+                  key={account.id}
+                  className="flex items-center justify-between rounded-lg border border-border p-3"
+                >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
                       <Icon className="h-5 w-5 text-secondary-foreground" />

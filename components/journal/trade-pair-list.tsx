@@ -44,32 +44,17 @@ export function TradePairList() {
 
     setAnalyzingId(pairId)
 
-    try {
-      const response = await fetch("/api/analyze-trade", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          asset: pair.buyTx.assetSymbol,
-          buyPrice: pair.buyTx.pricePerUnit,
-          sellPrice: pair.sellTx.pricePerUnit,
-          buyDate: pair.buyTx.transactionDate,
-          sellDate: pair.sellTx.transactionDate,
-          pnl: pair.pnl,
-          pnlPercent: pair.pnlPercentage,
-          holdingDays: pair.holdingDays,
-          notes: pair.buyTx.notes || pair.sellTx.notes || "",
-        }),
-      })
-
-      const data = await response.json()
-
-      // Update the sell transaction with AI analysis
-      updateTransaction(pair.sellTx.id, { aiAnalysis: data.analysis })
-    } catch (error) {
-      console.error("Failed to get AI analysis:", error)
-    } finally {
-      setAnalyzingId(null)
-    }
+    const review = [
+      "Local rule-based review · not AI-generated or investment advice.",
+      `Net result: ${formatUsd(pair.pnl)} after entry and exit fees.`,
+      `Holding period: ${pair.holdingDays.toFixed(1)} days.`,
+      pair.pnl >= 0
+        ? "Review whether the exit followed the original target, rather than judging the decision only by the profit."
+        : "Compare the exit with your planned invalidation level and review whether the position size was appropriate.",
+      "Execution quality and risk-adjusted performance cannot be inferred from prices alone. Record your entry thesis, position size, stop level and reason for exit.",
+    ].join("\n\n")
+    updateTransaction(pair.sellTx.id, { aiAnalysis: review })
+    setAnalyzingId(null)
   }
 
   if (pairsWithDetails.length === 0) {
@@ -79,7 +64,7 @@ export function TradePairList() {
           <TrendingUp className="mb-4 h-12 w-12 text-muted-foreground" />
           <h3 className="mb-2 text-lg font-semibold">No trade pairs yet</h3>
           <p className="mb-4 text-center text-sm text-muted-foreground">
-            Pair your buy and sell transactions to track performance and get AI insights
+            Pair your buy and sell transactions to track performance and review your decisions
           </p>
         </CardContent>
       </Card>
@@ -117,7 +102,7 @@ export function TradePairList() {
                         {format(new Date(pair.sellTx!.transactionDate), "MMM d, yyyy")}
                       </span>
                       <Clock className="ml-2 h-3 w-3" />
-                      <span>{pair.holdingDays} days</span>
+                      <span>{pair.holdingDays.toFixed(1)} days</span>
                     </div>
                   </div>
                 </div>
@@ -125,7 +110,15 @@ export function TradePairList() {
                   <Badge variant={isProfitable ? "default" : "destructive"}>
                     {formatUsd(pair.pnl)} ({formatPercent(pair.pnlPercentage)})
                   </Badge>
-                  <Button variant="ghost" size="icon" onClick={() => deleteTradePair(pair.id)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Unpair trade"
+                    onClick={() => {
+                      if (window.confirm("Unpair this trade? The transaction records will remain."))
+                        deleteTradePair(pair.id)
+                    }}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -143,14 +136,24 @@ export function TradePairList() {
                 </div>
                 <div className="rounded-lg bg-secondary p-3">
                   <p className="text-xs text-muted-foreground">ROI</p>
-                  <p className={cn("font-mono font-semibold", isProfitable ? "text-success" : "text-destructive")}>
+                  <p
+                    className={cn(
+                      "font-mono font-semibold",
+                      isProfitable ? "text-success" : "text-destructive",
+                    )}
+                  >
                     {formatPercent(pair.roi)}
                   </p>
                 </div>
                 <div className="rounded-lg bg-secondary p-3">
                   <p className="text-xs text-muted-foreground">APR</p>
-                  <p className={cn("font-mono font-semibold", pair.apr >= 0 ? "text-success" : "text-destructive")}>
-                    {formatPercent(pair.apr)}
+                  <p
+                    className={cn(
+                      "font-mono font-semibold",
+                      pair.apr >= 0 ? "text-success" : "text-destructive",
+                    )}
+                  >
+                    {pair.holdingDays >= 1 ? formatPercent(pair.apr) : "—"}
                   </p>
                 </div>
               </div>
@@ -182,7 +185,7 @@ export function TradePairList() {
                         <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
                           <div className="mb-2 flex items-center gap-2">
                             <Sparkles className="h-4 w-4 text-primary" />
-                            <span className="text-sm font-medium">AI Analysis</span>
+                            <span className="text-sm font-medium">Local review</span>
                           </div>
                           <p className="whitespace-pre-wrap text-sm">{pair.sellTx.aiAnalysis}</p>
                         </div>
@@ -200,7 +203,7 @@ export function TradePairList() {
                           ) : (
                             <>
                               <Sparkles className="mr-2 h-4 w-4" />
-                              Get AI Analysis
+                              Generate local review
                             </>
                           )}
                         </Button>

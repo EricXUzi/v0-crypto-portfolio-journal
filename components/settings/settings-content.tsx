@@ -1,160 +1,184 @@
 "use client"
-
+import { useRef, useState } from "react"
 import { useAppStore } from "@/lib/store"
+import { createBackup, parseBackup, type PortfolioData } from "@/lib/backup"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Download, Upload, Trash2, Database } from "lucide-react"
-
+import { Download, Upload, LockKeyhole } from "lucide-react"
 export function SettingsContent() {
-  const accounts = useAppStore((state) => state.accounts)
-  const transactions = useAppStore((state) => state.transactions)
-  const assets = useAppStore((state) => state.assets)
-  const tradePairs = useAppStore((state) => state.tradePairs)
-
-  const handleExport = () => {
-    const data = {
-      accounts,
-      transactions,
-      assets,
-      tradePairs,
-      exportedAt: new Date().toISOString(),
-    }
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
+  const state = useAppStore()
+  const input = useRef<HTMLInputElement>(null)
+  const [pending, setPending] = useState<PortfolioData | null>(null)
+  const [message, setMessage] = useState("")
+  const [error, setError] = useState("")
+  const [confirmClear, setConfirmClear] = useState(false)
+  function exportData() {
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(createBackup(state), null, 2)], { type: "application/json" }),
+    )
     const a = document.createElement("a")
     a.href = url
-    a.download = `cryptofolio-backup-${new Date().toISOString().split("T")[0]}.json`
-    document.body.appendChild(a)
+    a.download = `cryptofolio-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
-    document.body.removeChild(a)
     URL.revokeObjectURL(url)
+    setMessage("Backup downloaded. Keep it somewhere private.")
   }
-
-  const handleImport = () => {
-    const input = document.createElement("input")
-    input.type = "file"
-    input.accept = ".json"
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
-
-      const text = await file.text()
-      try {
-        const data = JSON.parse(text)
-        // Restore data to localStorage
-        localStorage.setItem(
-          "cryptofolio-storage",
-          JSON.stringify({
-            state: {
-              accounts: data.accounts || [],
-              transactions: data.transactions || [],
-              assets: data.assets || [],
-              tradePairs: data.tradePairs || [],
-            },
-          }),
-        )
-        window.location.reload()
-      } catch (error) {
-        console.error("Failed to import data:", error)
-        alert("Failed to import data. Please check the file format.")
-      }
-    }
-    input.click()
-  }
-
-  const handleClearData = () => {
-    localStorage.removeItem("cryptofolio-storage")
-    window.location.reload()
-  }
-
   return (
-    <div className="space-y-6">
-      <Card className="bg-card">
+    <div className="max-w-4xl space-y-6">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Data Summary
-          </CardTitle>
-          <CardDescription>Overview of your stored data</CardDescription>
+          <CardTitle>Workspace data</CardTitle>
+          <CardDescription>
+            {state.isDemo
+              ? "Demo workspace — sample records and fixed prices."
+              : "Saved in this browser on this device."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-4">
-            <div className="rounded-lg bg-secondary p-4">
-              <p className="text-2xl font-bold">{accounts.length}</p>
-              <p className="text-sm text-muted-foreground">Accounts</p>
-            </div>
-            <div className="rounded-lg bg-secondary p-4">
-              <p className="text-2xl font-bold">{transactions.length}</p>
-              <p className="text-sm text-muted-foreground">Transactions</p>
-            </div>
-            <div className="rounded-lg bg-secondary p-4">
-              <p className="text-2xl font-bold">{assets.length}</p>
-              <p className="text-sm text-muted-foreground">Assets</p>
-            </div>
-            <div className="rounded-lg bg-secondary p-4">
-              <p className="text-2xl font-bold">{tradePairs.length}</p>
-              <p className="text-sm text-muted-foreground">Trade Pairs</p>
-            </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {[
+              ["Accounts", state.accounts.length],
+              ["Holdings", state.assets.length],
+              ["Transactions", state.transactions.length],
+              ["Trade pairs", state.tradePairs.length],
+            ].map(([name, count]) => (
+              <div key={name} className="rounded-lg bg-secondary p-4">
+                <p className="text-2xl font-semibold">{count}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{name}</p>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
-
-      <Card className="bg-card">
+      <Card>
         <CardHeader>
-          <CardTitle>Backup & Restore</CardTitle>
-          <CardDescription>Export or import your portfolio data</CardDescription>
+          <CardTitle>Backup & restore</CardTitle>
+          <CardDescription>
+            Export a portable JSON backup. Importing replaces this workspace after confirmation.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="flex gap-4">
-          <Button onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
-            Export Data
-          </Button>
-          <Button variant="outline" onClick={handleImport}>
-            <Upload className="mr-2 h-4 w-4" />
-            Import Data
-          </Button>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={exportData}>
+              <Download className="mr-2 size-4" />
+              Export backup
+            </Button>
+            <Button variant="outline" onClick={() => input.current?.click()}>
+              <Upload className="mr-2 size-4" />
+              Choose backup
+            </Button>
+          </div>
+          <input
+            ref={input}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            aria-label="Choose JSON backup"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              e.target.value = ""
+              if (!file) return
+              setError("")
+              setPending(null)
+              try {
+                setPending(parseBackup(JSON.parse(await file.text())))
+              } catch {
+                setError("This backup is invalid or contains inconsistent records. Nothing was changed.")
+              }
+            }}
+          />
+          {pending && (
+            <div className="space-y-3 rounded-lg border border-warning/30 p-4">
+              <p className="text-sm">
+                Replace the current workspace with {pending.accounts.length} accounts, {pending.assets.length}{" "}
+                holdings and {pending.transactions.length} transactions? Export your current data first if you
+                need to keep it.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => {
+                    state.replaceData(pending)
+                    setPending(null)
+                    setMessage("Backup restored.")
+                  }}
+                >
+                  Replace workspace
+                </Button>
+                <Button variant="outline" onClick={() => setPending(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p role="status" className="text-sm text-success">
+              {message}
+            </p>
+          )}
         </CardContent>
       </Card>
-
-      <Card className="border-destructive bg-card">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>Irreversible actions</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <LockKeyhole className="size-4" />
+            Privacy & storage
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
+          <p>
+            Accounts, balances and journal notes stay in browser storage. They are not encrypted. Clearing
+            browser data or changing browsers will remove access unless you have a backup.
+          </p>
+          <p>
+            Market quotes request asset symbols from CoinGecko. Wallet addresses and notes are not sent with
+            quote requests. Trade reviews run locally; no AI service or paid API is required.
+          </p>
+          <p>
+            Holdings are manual snapshots. Recording, editing or deleting journal entries does not change
+            them. This tool does not execute trades, connect wallets or provide tax reports.
+          </p>
+        </CardContent>
+      </Card>
+      <Card className="border-destructive/25">
+        <CardHeader>
+          <CardTitle>Reset workspace</CardTitle>
+          <CardDescription>
+            {state.isDemo
+              ? "Remove the sample data and start with an empty workspace."
+              : "Remove all accounts, holdings, transactions and pairs from this browser."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Clear All Data
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete all your accounts, transactions, assets,
-                  and trade pairs from local storage.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleClearData}>Yes, delete everything</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {confirmClear ? (
+            <div className="space-y-3">
+              <p className="text-sm">This cannot be undone without a backup. Clear this workspace?</p>
+              <div className="flex gap-3">
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    state.resetData()
+                    setConfirmClear(false)
+                    setPending(null)
+                    setMessage("Workspace cleared.")
+                  }}
+                >
+                  Confirm clear
+                </Button>
+                <Button variant="outline" onClick={() => setConfirmClear(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="outline" className="text-destructive" onClick={() => setConfirmClear(true)}>
+              {state.isDemo ? "Clear demo data" : "Clear workspace"}
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>

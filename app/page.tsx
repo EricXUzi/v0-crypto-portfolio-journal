@@ -1,32 +1,31 @@
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
-import { StatsCards } from "@/components/dashboard/stats-cards"
+import { WorkspaceOverview } from "@/components/dashboard/workspace-overview"
 import { AssetDistribution } from "@/components/dashboard/asset-distribution"
 import { AccountOverview } from "@/components/dashboard/account-overview"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
-
 export default function DashboardPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex-1 pl-64">
+      <div className="min-w-0 flex-1 lg:pl-60">
         <Header />
-        <main className="p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Overview of your crypto portfolio and trading performance</p>
+        <main id="main-content" className="mx-auto max-w-[1600px] space-y-7 p-4 sm:p-8">
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.2em] text-muted-foreground">
+              Your portfolio at a glance
+            </p>
+            <h1 className="text-3xl font-semibold">Portfolio overview</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Capital, positions, and the decisions behind them.
+            </p>
           </div>
-
-          <div className="space-y-6">
-            <StatsCards />
-
-            <div className="grid gap-6 lg:grid-cols-2">
-              <AssetDistribution />
-              <AccountOverview />
-            </div>
-
-            <RecentTransactions />
+          <WorkspaceOverview />
+          <div className="grid gap-6 xl:grid-cols-2">
+            <AssetDistribution />
+            <AccountOverview />
           </div>
+          <RecentTransactions />
         </main>
       </div>
     </div>

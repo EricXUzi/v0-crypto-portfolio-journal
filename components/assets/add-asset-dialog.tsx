@@ -93,7 +93,12 @@ export function AddAssetDialog() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Name (optional)</Label>
-              <Input id="name" placeholder="Ethereum" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input
+                id="name"
+                placeholder="Ethereum"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
           </div>
 
@@ -120,6 +125,7 @@ export function AddAssetDialog() {
                 id="quantity"
                 type="number"
                 step="any"
+                min="0"
                 placeholder="1.5"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
@@ -132,6 +138,7 @@ export function AddAssetDialog() {
                 id="averageCost"
                 type="number"
                 step="any"
+                min="0"
                 placeholder="2000"
                 value={averageCost}
                 onChange={(e) => setAverageCost(e.target.value)}
