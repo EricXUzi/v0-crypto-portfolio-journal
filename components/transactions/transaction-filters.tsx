@@ -49,7 +49,8 @@ const transactionTypes: { value: TransactionType; label: string }[] = [
 
 export function TransactionFilters() {
   const accounts = useAppStore((state) => state.accounts)
-  const { search, accountId, type, status, setSearch, setAccountId, setType, setStatus } = useTransactionFilters()
+  const { search, accountId, type, status, setSearch, setAccountId, setType, setStatus } =
+    useTransactionFilters()
 
   return (
     <Card className="mb-6 bg-card">
@@ -78,7 +79,10 @@ export function TransactionFilters() {
           </SelectContent>
         </Select>
 
-        <Select value={type || "all"} onValueChange={(v) => setType(v === "all" ? null : (v as TransactionType))}>
+        <Select
+          value={type || "all"}
+          onValueChange={(v) => setType(v === "all" ? null : (v as TransactionType))}
+        >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="All Types" />
           </SelectTrigger>
@@ -92,7 +96,10 @@ export function TransactionFilters() {
           </SelectContent>
         </Select>
 
-        <Select value={status || "all"} onValueChange={(v) => setStatus(v === "all" ? null : (v as TransactionStatus))}>
+        <Select
+          value={status || "all"}
+          onValueChange={(v) => setStatus(v === "all" ? null : (v as TransactionStatus))}
+        >
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="All Status" />
           </SelectTrigger>

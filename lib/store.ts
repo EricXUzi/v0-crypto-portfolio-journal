@@ -1,8 +1,14 @@
 import { create } from "zustand"
+import { calculateTradePair } from "./portfolio"
+import { parseBackup } from "./backup"
 import { persist } from "zustand/middleware"
 import type { Account, Transaction, Asset, PriceCache, TradePair } from "./types"
 
 interface AppState {
+  isDemo: boolean
+  replaceData: (data: unknown) => void
+  resetData: () => void
+
   // Data
   accounts: Account[]
   transactions: Transaction[]
@@ -45,6 +51,18 @@ const generateId = () => crypto.randomUUID()
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      isDemo: false,
+      replaceData: (data) => set({ ...parseBackup(data), priceCache: new Map(), selectedAccountId: null }),
+      resetData: () =>
+        set({
+          accounts: [],
+          assets: [],
+          transactions: [],
+          tradePairs: [],
+          isDemo: false,
+          priceCache: new Map(),
+          selectedAccountId: null,
+        }),
       accounts: [],
       transactions: [],
       assets: [],
@@ -68,15 +86,28 @@ export const useAppStore = create<AppState>()(
 
       updateAccount: (id, updates) =>
         set((state) => ({
-          accounts: state.accounts.map((a) => (a.id === id ? { ...a, ...updates, updatedAt: new Date() } : a)),
+          accounts: state.accounts.map((a) =>
+            a.id === id ? { ...a, ...updates, updatedAt: new Date() } : a,
+          ),
         })),
 
-      deleteAccount: (id) =>
-        set((state) => ({
+      deleteAccount: (id) => {
+        const state = get()
+        const deleted = new Set(state.transactions.filter((t) => t.accountId === id).map((t) => t.id))
+        const remainingPairs = state.tradePairs.filter(
+          (p) => !deleted.has(p.buyTransactionId) && !deleted.has(p.sellTransactionId),
+        )
+        const pairIds = new Set(remainingPairs.map((p) => p.id))
+        set({
           accounts: state.accounts.filter((a) => a.id !== id),
-          transactions: state.transactions.filter((t) => t.accountId !== id),
           assets: state.assets.filter((a) => a.accountId !== id),
-        })),
+          transactions: state.transactions
+            .filter((t) => !deleted.has(t.id))
+            .map((t) => ({ ...t, pairId: t.pairId && pairIds.has(t.pairId) ? t.pairId : undefined })),
+          tradePairs: remainingPairs,
+          selectedAccountId: state.selectedAccountId === id ? null : state.selectedAccountId,
+        })
+      },
 
       // Transaction Actions
       addTransaction: (transaction) =>
@@ -92,15 +123,34 @@ export const useAppStore = create<AppState>()(
           ],
         })),
 
-      updateTransaction: (id, updates) =>
-        set((state) => ({
-          transactions: state.transactions.map((t) => (t.id === id ? { ...t, ...updates, updatedAt: new Date() } : t)),
-        })),
-
-      deleteTransaction: (id) =>
-        set((state) => ({
-          transactions: state.transactions.filter((t) => t.id !== id),
-        })),
+      updateTransaction: (id, updates) => {
+        const state = get()
+        const transactions = state.transactions.map((t) =>
+          t.id === id ? { ...t, ...updates, updatedAt: new Date() } : t,
+        )
+        const tradePairs = state.tradePairs.map((p) =>
+          p.buyTransactionId === id || p.sellTransactionId === id
+            ? {
+                ...p,
+                ...calculateTradePair(
+                  transactions.find((t) => t.id === p.buyTransactionId)!,
+                  transactions.find((t) => t.id === p.sellTransactionId)!,
+                ),
+              }
+            : p,
+        )
+        set({ transactions, tradePairs })
+      },
+      deleteTransaction: (id) => {
+        const state = get()
+        const pair = state.tradePairs.find((p) => p.buyTransactionId === id || p.sellTransactionId === id)
+        set({
+          transactions: state.transactions
+            .filter((t) => t.id !== id)
+            .map((t) => (pair && t.pairId === pair.id ? { ...t, pairId: undefined } : t)),
+          tradePairs: state.tradePairs.filter((p) => p.id !== pair?.id),
+        })
+      },
 
       settleTransaction: (id) =>
         set((state) => ({
@@ -139,15 +189,9 @@ export const useAppStore = create<AppState>()(
         const buyTx = state.transactions.find((t) => t.id === buyId)
         const sellTx = state.transactions.find((t) => t.id === sellId)
 
-        if (!buyTx || !sellTx) return
-
-        const pnl = sellTx.totalValue - buyTx.totalValue - buyTx.fee - sellTx.fee
-        const pnlPercentage = (pnl / buyTx.totalValue) * 100
-        const holdingDays = Math.ceil(
-          (new Date(sellTx.transactionDate).getTime() - new Date(buyTx.transactionDate).getTime()) /
-            (1000 * 60 * 60 * 24),
-        )
-        const apr = holdingDays > 0 ? (pnlPercentage / holdingDays) * 365 : 0
+        if (!buyTx || !sellTx) throw new Error("Select two existing transactions.")
+        if (buyTx.pairId || sellTx.pairId) throw new Error("A selected transaction is already paired.")
+        const { pnl, pnlPercentage, roi, holdingDays, apr } = calculateTradePair(buyTx, sellTx)
 
         const pairId = generateId()
 
@@ -160,14 +204,16 @@ export const useAppStore = create<AppState>()(
               sellTransactionId: sellId,
               pnl,
               pnlPercentage,
-              roi: pnlPercentage,
+              roi,
               apr,
               holdingDays,
               createdAt: new Date(),
             },
           ],
           transactions: state.transactions.map((t) =>
-            t.id === buyId || t.id === sellId ? { ...t, pairId, status: "settled" as const, updatedAt: new Date() } : t,
+            t.id === buyId || t.id === sellId
+              ? { ...t, pairId, status: "settled" as const, updatedAt: new Date() }
+              : t,
           ),
         }))
       },
@@ -210,6 +256,7 @@ export const useAppStore = create<AppState>()(
         transactions: state.transactions,
         assets: state.assets,
         tradePairs: state.tradePairs,
+        isDemo: state.isDemo,
       }),
     },
   ),

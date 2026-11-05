@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAppStore } from "@/lib/store"
@@ -37,8 +38,6 @@ export function TransactionForm() {
   const router = useRouter()
   const accounts = useAppStore((state) => state.accounts)
   const addTransaction = useAppStore((state) => state.addTransaction)
-  const addAsset = useAppStore((state) => state.addAsset)
-  const assets = useAppStore((state) => state.assets)
 
   const [accountId, setAccountId] = useState("")
   const [type, setType] = useState<TransactionType>("spot")
@@ -48,7 +47,8 @@ export function TransactionForm() {
   const [quantity, setQuantity] = useState("")
   const [pricePerUnit, setPricePerUnit] = useState("")
   const [fee, setFee] = useState("0")
-  const [feeAsset, setFeeAsset] = useState("USDT")
+  const feeAsset = "USD"
+  const [side, setSide] = useState<"buy" | "sell">("buy")
   const [date, setDate] = useState<Date>(new Date())
   const [notes, setNotes] = useState("")
 
@@ -61,11 +61,13 @@ export function TransactionForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!assetSymbol.trim() || !accountId || Number(quantity) <= 0) return
     const transaction = {
       accountId,
       type,
       status,
-      assetSymbol: assetSymbol.toUpperCase(),
+      side: ["spot", "swap"].includes(type) ? side : undefined,
+      assetSymbol: assetSymbol.trim().toUpperCase(),
       assetName: assetName || assetSymbol.toUpperCase(),
       quantity: Number.parseFloat(quantity),
       pricePerUnit: Number.parseFloat(pricePerUnit),
@@ -74,7 +76,7 @@ export function TransactionForm() {
       fromQuantity: type === "swap" ? Number.parseFloat(fromQuantity) : undefined,
       toAsset: type === "swap" ? assetSymbol.toUpperCase() : undefined,
       toQuantity: type === "swap" ? Number.parseFloat(quantity) : undefined,
-      fee: Number.parseFloat(fee),
+      fee: Number(fee || "0"),
       feeAsset,
       notes,
       transactionDate: date,
@@ -82,37 +84,30 @@ export function TransactionForm() {
 
     addTransaction(transaction)
 
-    // Auto-create or update asset if buying/receiving
-    if (["spot", "swap", "tge_ido", "airdrop", "nft_buy", "nft_mint"].includes(type)) {
-      const existingAsset = assets.find(
-        (a) => a.accountId === accountId && a.symbol.toUpperCase() === assetSymbol.toUpperCase(),
-      )
-
-      if (!existingAsset) {
-        addAsset({
-          accountId,
-          symbol: assetSymbol.toUpperCase(),
-          name: assetName || assetSymbol.toUpperCase(),
-          category: ["nft_buy", "nft_mint"].includes(type)
-            ? "nft"
-            : ["USDT", "USDC", "DAI", "BUSD"].includes(assetSymbol.toUpperCase())
-              ? "stablecoin"
-              : "volatile",
-          quantity: Number.parseFloat(quantity),
-          averageCost: Number.parseFloat(pricePerUnit),
-        })
-      }
-    }
-
     router.push("/transactions")
   }
 
   const isSwap = type === "swap"
 
+  if (!accounts.length)
+    return (
+      <Card>
+        <CardContent className="space-y-4 p-8">
+          <p>Create an account before recording a transaction.</p>
+          <Button asChild>
+            <Link href="/accounts">Create an account</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    )
+
   return (
     <Card className="mx-auto max-w-2xl bg-card">
       <CardHeader>
-        <CardTitle>Transaction Details</CardTitle>
+        <CardTitle>Transaction details</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Journal entries are records only. Maintain current balances separately in Assets.
+        </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -153,6 +148,21 @@ export function TransactionForm() {
             </div>
           </div>
 
+          {["spot", "swap"].includes(type) && (
+            <div className="space-y-2">
+              <Label htmlFor="trade-side">Trade side</Label>
+              <select
+                id="trade-side"
+                className="h-10 w-full rounded-md border border-input bg-card px-3 text-sm"
+                value={side}
+                onChange={(e) => setSide(e.target.value as "buy" | "sell")}
+              >
+                <option value="buy">Buy / entry</option>
+                <option value="sell">Sell / exit</option>
+              </select>
+            </div>
+          )}
+
           {isSwap && (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -171,6 +181,7 @@ export function TransactionForm() {
                   id="fromQuantity"
                   type="number"
                   step="any"
+                  min="0"
                   placeholder="1000"
                   value={fromQuantity}
                   onChange={(e) => setFromQuantity(e.target.value)}
@@ -209,6 +220,7 @@ export function TransactionForm() {
                 id="quantity"
                 type="number"
                 step="any"
+                min="0.000000000000000001"
                 placeholder="0.5"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
@@ -221,6 +233,7 @@ export function TransactionForm() {
                 id="pricePerUnit"
                 type="number"
                 step="any"
+                min="0"
                 placeholder="2000"
                 value={pricePerUnit}
                 onChange={(e) => setPricePerUnit(e.target.value)}
@@ -239,11 +252,12 @@ export function TransactionForm() {
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="fee">Fee</Label>
+              <Label htmlFor="fee">Fee (USD equivalent)</Label>
               <Input
                 id="fee"
                 type="number"
                 step="any"
+                min="0"
                 placeholder="0"
                 value={fee}
                 onChange={(e) => setFee(e.target.value)}
@@ -251,7 +265,7 @@ export function TransactionForm() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="feeAsset">Fee Asset</Label>
-              <Input id="feeAsset" placeholder="USDT" value={feeAsset} onChange={(e) => setFeeAsset(e.target.value)} />
+              <Input id="feeAsset" value="USD" readOnly />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
@@ -273,7 +287,10 @@ export function TransactionForm() {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground",
+                  )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "PPP") : "Pick a date"}

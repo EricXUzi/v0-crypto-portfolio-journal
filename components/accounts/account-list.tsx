@@ -5,7 +5,12 @@ import { usePortfolio } from "@/lib/hooks/use-portfolio"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Wallet, Building2, HardDrive, Globe, MoreVertical, Pencil, Trash2, Copy } from "lucide-react"
 import type { AccountType } from "@/lib/types"
 import { useState } from "react"
@@ -87,7 +92,7 @@ export function AccountList() {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button aria-label="Open record actions" variant="ghost" size="icon" className="h-8 w-8">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -102,7 +107,17 @@ export function AccountList() {
                       Copy Address
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => deleteAccount(account.id)} className="text-destructive">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          `Delete ${account.name} and its holdings, transactions and trade pairs?`,
+                        )
+                      )
+                        deleteAccount(account.id)
+                    }}
+                    className="text-destructive"
+                  >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
@@ -113,7 +128,9 @@ export function AccountList() {
               {account.address && (
                 <p className="mb-3 truncate font-mono text-xs text-muted-foreground">{account.address}</p>
               )}
-              {account.exchange && <p className="mb-3 text-sm text-muted-foreground">Exchange: {account.exchange}</p>}
+              {account.exchange && (
+                <p className="mb-3 text-sm text-muted-foreground">Exchange: {account.exchange}</p>
+              )}
               <div className="flex items-center justify-between border-t border-border pt-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Total Value</p>

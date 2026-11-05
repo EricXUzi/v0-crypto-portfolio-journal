@@ -1,0 +1,17 @@
+name: 功能建议
+description: 说明你想解决的使用问题
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景
+      description: 你现在如何完成这件事，哪里最费时间？
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 希望得到的结果
+      description: 有去敏的数据示例或操作流程也可以附上。
+    validations:
+      required: true

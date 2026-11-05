@@ -64,7 +64,9 @@ export function RecentTransactions() {
       </CardHeader>
       <CardContent>
         {recentTransactions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No transactions yet. Record your first trade to get started.</p>
+          <p className="text-sm text-muted-foreground">
+            No transactions yet. Record your first trade to get started.
+          </p>
         ) : (
           <div className="space-y-4">
             {recentTransactions.map((tx) => {

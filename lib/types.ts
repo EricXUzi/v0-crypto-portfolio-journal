@@ -48,6 +48,8 @@ export interface Transaction {
   id: string
   accountId: string
   type: TransactionType
+  side?: "buy" | "sell" // Optional for legacy records
+  feeUsd?: number // Explicit USD equivalent for non-USD fees
   status: TransactionStatus
 
   // Asset details

@@ -7,10 +7,10 @@ export default function AccountsPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex-1 pl-64">
+      <div className="min-w-0 flex-1 lg:pl-60">
         <Header />
-        <main className="p-6">
-          <div className="mb-6 flex items-center justify-between">
+        <main className="mx-auto max-w-[1600px] p-4 sm:p-8">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold">Accounts</h1>
               <p className="text-muted-foreground">Manage your CEX accounts, wallets, and cold storage</p>

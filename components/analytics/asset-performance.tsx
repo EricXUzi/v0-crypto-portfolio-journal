@@ -73,7 +73,9 @@ export function AssetPerformance() {
           <CardTitle>Performance by Asset</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Complete some trades to see performance statistics by asset.</p>
+          <p className="text-sm text-muted-foreground">
+            Complete some trades to see performance statistics by asset.
+          </p>
         </CardContent>
       </Card>
     )
@@ -116,11 +118,16 @@ export function AssetPerformance() {
                   <TableCell className="text-right">
                     <Badge variant={winRate >= 50 ? "default" : "secondary"}>{winRate.toFixed(0)}%</Badge>
                   </TableCell>
-                  <TableCell className={cn("text-right font-mono", isProfitable ? "text-success" : "text-destructive")}>
+                  <TableCell
+                    className={cn("text-right font-mono", isProfitable ? "text-success" : "text-destructive")}
+                  >
                     {formatUsd(stat.totalPnl)}
                   </TableCell>
                   <TableCell
-                    className={cn("text-right font-mono", stat.avgRoi >= 0 ? "text-success" : "text-destructive")}
+                    className={cn(
+                      "text-right font-mono",
+                      stat.avgRoi >= 0 ? "text-success" : "text-destructive",
+                    )}
                   >
                     {formatPercent(stat.avgRoi)}
                   </TableCell>

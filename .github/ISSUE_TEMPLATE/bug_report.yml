@@ -1,0 +1,27 @@
+name: 问题反馈
+description: 报告可复现的问题
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 发生了什么？
+      description: 描述实际结果和你预期的结果，不要上传私人账本或凭据。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: 使用演示数据时，进入哪个页面，进行了哪些操作？
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: 浏览器和设备
+      placeholder: 例如 Safari / macOS，Chrome / Android
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 截图或错误提示
+      description: 请先移除个人资产、地址及其他敏感信息。
